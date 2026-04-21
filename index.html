@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi Lista de Tareas</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      color: #333;
+    }
+
+    header {
+      background: #2d6a4f;
+      color: white;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      letter-spacing: 1px;
+    }
+
+    nav a {
+      color: #b7e4c7;
+      text-decoration: none;
+      margin-left: 16px;
+      font-size: 0.95rem;
+    }
+
+    nav a:hover {
+      color: white;
+    }
+
+    /* ===== Contenido principal ===== */
+    main {
+      max-width: 700px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #2d6a4f;
+    }
+
+    /* ===== Formulario ===== */
+    .form-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .form-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .form-row input:focus {
+      border-color: #2d6a4f;
+    }
+
+    .form-row button {
+      padding: 10px 20px;
+      background: #2d6a4f;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .form-row button:hover {
+      background: #1b4332;
+    }
+
+    /* ===== Lista de tareas ===== */
+    #task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #task-list li {
+      background: white;
+      padding: 14px 18px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #task-list li.done span {
+      text-decoration: line-through;
+      color: #aaa;
+    }
+
+    #task-list li button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .btn-done { color: #2d6a4f; }
+    .btn-done:hover { background: #d8f3dc; }
+    .btn-delete { color: #e63946; }
+    .btn-delete:hover { background: #ffe5e5; }
+
+    /* ===== Contador ===== */
+    .stats {
+      margin-top: 28px;
+      background: white;
+      border-radius: 10px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      display: flex;
+      gap: 24px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-item .number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2d6a4f;
+    }
+
+    .stat-item .label {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px;
+      color: #888;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>TaskApp</h1>
+    <nav>
+      <a href="#">Inicio</a>
+      <a href="#">Mis Tareas</a>
+      <a href="#">Perfil</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2>Mis Tareas</h2>
+
+    <div class="form-row">
+      <input type="text" id="task-input" placeholder="Escribe una tarea..." />
+      <button onclick="addTask()">Agregar</button>
+    </div>
+
+    <ul id="task-list"></ul>
+
+    <div class="stats">
+      <div class="stat-item">
+        <div class="number" id="total-count">0</div>
+        <div class="label">Total</div>
+      </div>
+      <div class="stat-item">
+        <div class="number" id="done-count">0</div>
+        <div class="label">Completadas</div>
+      </div>
+      <div class="stat-item">
+        <div class="number" id="pending-count">0</div>
+        <div class="label">Pendientes</div>
+      </div>
+    </div>
+  </main>
+
+  <footer>Hecho con Claude Code ✦ 2026</footer>
+
+  <script>
+    function createTaskElement(text, done) {
+      const li = document.createElement('li');
+      if (done) li.classList.add('done');
+      li.innerHTML = `
+        <span>${text}</span>
+        <div>
+          <button class="btn-done" onclick="toggleDone(this)" title="Completar">✓</button>
+          <button class="btn-delete" onclick="deleteTask(this)" title="Eliminar">✕</button>
+        </div>
+      `;
+      return li;
+    }
+
+    function saveTasks() {
+      const items = [...document.querySelectorAll('#task-list li')].map(li => ({
+        text: li.querySelector('span').textContent,
+        done: li.classList.contains('done'),
+      }));
+      localStorage.setItem('tasks', JSON.stringify(items));
+    }
+
+    function loadTasks() {
+      const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+      const list = document.getElementById('task-list');
+      tasks.forEach(({ text, done }) => list.appendChild(createTaskElement(text, done)));
+      updateStats();
+    }
+
+    function addTask() {
+      const input = document.getElementById('task-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      document.getElementById('task-list').appendChild(createTaskElement(text, false));
+      input.value = '';
+      updateStats();
+      saveTasks();
+    }
+
+    function toggleDone(btn) {
+      btn.closest('li').classList.toggle('done');
+      updateStats();
+      saveTasks();
+    }
+
+    function deleteTask(btn) {
+      btn.closest('li').remove();
+      updateStats();
+      saveTasks();
+    }
+
+    function updateStats() {
+      const total = document.querySelectorAll('#task-list li').length;
+      const done  = document.querySelectorAll('#task-list li.done').length;
+      const pending = total - done;
+
+      document.getElementById('total-count').textContent   = total;
+      document.getElementById('done-count').textContent    = done;
+      document.getElementById('pending-count').textContent = pending;
+    }
+
+    document.getElementById('task-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addTask();
+    });
+    
+
+    loadTasks();
+  </script>
+
+</body>
+</html>
